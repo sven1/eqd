@@ -454,14 +454,22 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
     copy_graph(g, tmpG);
   }
 
-  for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
-    if(pm.cl[*vIt1] > 1){
-      pm.cl[*vIt1] = 0;
-    }
-  }
-
   if(parm.wStartCl){
+	for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
+		if(pm.cl[*vIt1] > 1){
+			pm.cl[*vIt1] = 0;
+		}
+	}
+
 	setClique(startClique.size(), 1, false);
+  }else{
+	for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
+		if(pm.cl[*vIt1] >= 1){
+			pm.cl[*vIt1] = 0;
+		}
+	}
+
+	setClique(0, 0, false);
   }
 
   findIndepCliques(indClq, true, true);
@@ -478,10 +486,11 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
     }else{
       //std::cout << "###LOG2 vNode = " << c.visitedNodes << " Better Yes (" << cl.nodesInClique - startClique.size() << ")" << std::endl; 
       //printIndepCliques(indClq);
+		return true;
     }
   }
 
-  return true;
+  std::cout << "error updating clique" << std::endl;
 }
 
 
