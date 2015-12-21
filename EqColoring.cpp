@@ -5,9 +5,13 @@ EqColoring::EqColoring() : Coloring(){
 
 EqColoring::EqColoring(const Parameters &parm) : Coloring(parm){
   setBounds(b.LB, calcUB());
-  curr.minBackupGraph.push_back(b.LB);
-
-//  printClique(startClique);
+  //curr.minBackupGraph.push_back(b.LB);
+  
+  //std::cout << "nodesInClique = " << cl.nodesInClique << std::endl;
+  //std::cout << "nCliques = " << cl.nCliques << std::endl;
+  //std::cout << "nInCliqueBp = " << cl.nInCliqueBp << std::endl;
+  //std::cout << "nNodesSameCl = " << cl.nNodesSameCl << std::endl;
+  //std::cout << "startclique = " << startClique.size() << std::endl;
 
   if(parm.eqDsatur == 'N'){
     dsatur();
@@ -59,18 +63,30 @@ bool EqColoring::node(){
 
     return true;
   }
-
+  
+  //std::cout << "TEST BEFORE A " << std::endl;
   Vertex v = passVSS();
 
+  //std::cout << "curr.T = " << curr.T << std::endl;
+  //std::cout << "curr.M = " << curr.M << std::endl;
+  //std::cout << "curr.uncoloredVertices = " << curr.uncoloredVertices << std::endl;
+  //std::cout << "curr.nColors = " << curr.nColors << std::endl;
+
+  //std::cout << "TEST A " << std::endl;
   for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
+  //std::cout << "TEST B " << std::endl;
     if(pm.fbc[v][i - 1] == 0){
+  //std::cout << "TEST C " << std::endl;
       if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
+  //std::cout << "TEST D " << std::endl;
         c.visitedNodes++;
 
         colorVertex(v, i);
 
+  //std::cout << "TEST E " << std::endl;
         node(); 
        
+  //std::cout << "TEST F " << std::endl;
 	      if(t.timeout){
 	        return true;
 	      }
@@ -90,6 +106,7 @@ bool EqColoring::node(){
     }
   }
 
+  //std::cout << "BACKTRACK" << std::endl;
   checkForBacktracking(v);
 
   return false;
@@ -443,8 +460,10 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
     }
   }
 
-  setClique(startClique.size(), 1, false);
-      
+  if(parm.wStartCl){
+	setClique(startClique.size(), 1, false);
+  }
+
   findIndepCliques(indClq, true, true);
 
   if(sBetterClique == true){
@@ -453,12 +472,12 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
       g = tmpG;
       indClq = tmpIndClq;
       
-      std::cout << "###LOG2 vNode = " << c.visitedNodes << " Better No (" << tmpCl.nodesInClique - startClique.size() << ")" <<  std::endl; 
+      //std::cout << "###LOG2 vNode = " << c.visitedNodes << " Better No (" << tmpCl.nodesInClique - startClique.size() << ")" <<  std::endl; 
 
       return false;
     }else{
-      std::cout << "###LOG2 vNode = " << c.visitedNodes << " Better Yes (" << cl.nodesInClique - startClique.size() << ")" << std::endl; 
-      printIndepCliques(indClq);
+      //std::cout << "###LOG2 vNode = " << c.visitedNodes << " Better Yes (" << cl.nodesInClique - startClique.size() << ")" << std::endl; 
+      //printIndepCliques(indClq);
     }
   }
 
@@ -469,6 +488,7 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
 bool EqColoring::updateIndepCliques(Vertex &v){
   //if(pm.cl[v] > 1 || (cl.nodesInClique - startClique.size() / 1. * curr.uncoloredVertices) <= 2.5 ){
   //if((cl.nodesInClique - startClique.size() / 1. * curr.uncoloredVertices) <= 5 ){
+  /*
      if(cl.nodesInClique - startClique.size() == 0){
       if(useNewIndepCliques(true)){
         cl.nNodesSameCl = 0;
@@ -477,21 +497,31 @@ bool EqColoring::updateIndepCliques(Vertex &v){
         return true;
       }
   }
+*/
+	int tmp1=1;
 
-  if(pm.cl[v] > 1 ){
+	if(!parm.wStartCl){
+		tmp1=0;
+	}
+
+  if(pm.cl[v] > tmp1 ){
     cl.nNodesSameCl++;
 
     //std::cout << "cl.nodesInClique = " << cl.nodesInClique <<  std::endl;
     //std::cout << "cl.nCliques = " << cl.nCliques <<  std::endl;
     //std::cout << "nNodesSameCl = " << cl.nNodesSameCl << " und nInCliqueBp = " << cl.nInCliqueBp << std::endl;
     //std::cout << "Node = " << v << " und Clique = " << pm.cl[v] << std::endl;
-    if(cl.nNodesSameCl / (cl.nInCliqueBp * 1.0) >= parm.pNewCl){
+    if(cl.nNodesSameCl / (cl.nInCliqueBp * 1.0) > parm.pNewCl){
     //if(cl.nInCliqueBp - cl.nNodesSameCl <= 2){
       if(useNewIndepCliques(true)){
         cl.nNodesSameCl = 0;
     //    c.newCliques++;
       }else{
-        removeVinIndClq(v, indClq);
+		if(!removeVinIndClq(v, indClq)){
+			std::cout << "error while removing specific vertex from indepent cliques" << std::endl;
+		}
+
+		return false;
       }
     }else{
       if(!removeVinIndClq(v, indClq)){
@@ -500,12 +530,13 @@ bool EqColoring::updateIndepCliques(Vertex &v){
 
       return false;
     }
-  }else if(pm.cl[v] == 1){
+  }else if(pm.cl[v] == 1 && parm.wStartCl){
     std::cout << "UpdateIndepClique Knoten v aus Startclique!" << std::endl;
   }else{
+	  /*
     if(!useNewIndepCliques(true)){
       return false;
-    }
+    }*/
 
     return false;
   }
@@ -657,7 +688,7 @@ bool EqColoring::nodeClique(){
 	    if(checkEqColoring()){
 		    b.UB = curr.nColors;
         
-        newUBBacktracking();
+			newUBBacktracking();
       }
     }
 
@@ -669,21 +700,21 @@ bool EqColoring::nodeClique(){
 
   if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
 	  if(!pruneFF()){	
-      for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
-        if(pm.fbc[v][i - 1] == 0){
+		for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
+			if(pm.fbc[v][i - 1] == 0){
           //std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << std::endl;
 
-          c.visitedNodes++; 
+			c.visitedNodes++; 
 
-          std::cout << "###LOG1 vNode = " << c.visitedNodes << " Knoten in Cliquenueberdeckung = " << cl.nodesInClique - startClique.size() << " ungefäbte Knoten = " << curr.uncoloredVertices  << std::endl;
+			//std::cout << "###LOG1 vNode = " << c.visitedNodes << " Knoten in Cliquenueberdeckung = " << cl.nodesInClique - startClique.size() << " ungefäbte Knoten = " << curr.uncoloredVertices  << std::endl;
 
-          colorVertex(v, i);
+			colorVertex(v, i);
 
-          t.startUIC = std::clock();
+			t.startUIC = std::clock();
 	        
-          updateIndepCliques(v);
+			updateIndepCliques(v);
 	  
-          t.timeUIC += (std::clock() - t.startUIC) / (double) CLOCKS_PER_SEC;
+			t.timeUIC += (std::clock() - t.startUIC) / (double) CLOCKS_PER_SEC;
 
 	  //if(!curr.createNewGraphs){
 	  //  updateBackupGraphs(v, i, true);
@@ -699,14 +730,14 @@ bool EqColoring::nodeClique(){
             //std::cout << "indClq[j].size = " << indClq[j].size() << std::endl;
           //}
 
-          nodeClique(); 
+			nodeClique(); 
 
           //std::cout << "--------------------------------------------------------------- " << std::endl;
           //std::cout << "Entfaerbe Knoten = " << v << " mit Farbe = " << i << std::endl;
 
-	        if(t.timeout){
-  	        return true;
-	        }
+			if(t.timeout){
+				return true;
+			}
 
 	  //if(curr.rankNC < curr.rank){
 	    //updateBackupGraphs(v, i, false);
@@ -733,7 +764,7 @@ bool EqColoring::nodeClique(){
         }
       }
     }else{
-      std::cout << "###LOG3 vNodes = " << c.visitedNodes << " abgeschnitten " << std::endl;
+      //std::cout << "###LOG3 vNodes = " << c.visitedNodes << " abgeschnitten " << std::endl;
     }
   }
 

@@ -44,7 +44,11 @@ Coloring::~Coloring(){
 }
 
 int Coloring::calcLB(){
-  return startClique.size();
+	if(parm.wStartCl){
+		return startClique.size();
+	}else{
+		return b.LB;
+	}
 }
 
 int Coloring::calcUB(){
@@ -62,14 +66,16 @@ int Coloring::calcUB(){
 }
 
 bool Coloring::initCliques(){
-  //findMaxClique(startClique, true, true);
-  //putInClique(startClique);
-  //colorClique(startClique, 1);
+	if(parm.wStartCl){
+		findMaxClique(startClique, true, true);
+		putInClique(startClique);
+		colorClique(startClique, 1);
+	}
+
+  findIndepCliques(indClq, true, true);
+
   printClique(startClique);
-useIndepClique(indClq);
-  //findIndepCliques(indClq, true, true);
   printIndepCliques(indClq);
-  //printVertexInfo();
 
   return true;
 }
@@ -150,7 +156,7 @@ bool Coloring::colorClique(std::vector<Vertex> &clq, int startColor){
   return true;
 }
 
-bool Coloring::setParm(long n, double p, long npr, long tl, long th, std::string res, long nrg, char variant){
+bool Coloring::setParm(long n, double p, long npr, long tl, long th, std::string res, long nrg, char variant, double pNewCl){
   parm.n = n;
   parm.ressource = res;
   parm.nPruningRule = npr;
@@ -159,6 +165,7 @@ bool Coloring::setParm(long n, double p, long npr, long tl, long th, std::string
   parm.p = p;
   parm.nRandomGraphs = nrg;
   parm.variant = variant;
+  parm.pNewCl = pNewCl;
 
   return true;
 }
@@ -204,7 +211,7 @@ bool Coloring::removeVinIndClq(Vertex &v, std::vector<std::vector<Vertex> > &ind
         pm.cl[v] = 0;
 
         return true;
-      }
+	  }
     }
   }
 
@@ -311,6 +318,8 @@ bool Coloring::findMaxClique(std::vector<Vertex> &clq, Vertex v, bool uncolored,
   std::vector<Vertex> neighbours, tmp;
   Vertex w;
   
+  tmp.clear();
+
   if(!putNodeWithParm(v, clq, uncolored, inNoOtherClique)){
     return true;
   }
@@ -375,6 +384,10 @@ bool Coloring::findMaxClique(std::vector<Vertex> &clq, bool uncolored, bool inNo
 
   clq = maxClique;
 
+  if(clq.size() > (unsigned) b.LB){
+	b.LB = clq.size();
+  }
+
   return true;
 }
 
@@ -432,7 +445,7 @@ void Coloring::useIndepClique(std::vector<std::vector<Vertex> > &indClq){
   }
 
   //setClique(startClique.size(), 1, false);
-
+/*
  indClq.clear();
 
   std::vector<Vertex> tmp, tmp2;
@@ -447,12 +460,19 @@ void Coloring::useIndepClique(std::vector<std::vector<Vertex> > &indClq){
   tmp2.push_back(10);
   tmp2.push_back(9);
   tmp2.push_back(11);
-  indClq.push_back(tmp2);
+  indClq.push_back(tmp2);*/
 }
 
 void Coloring::printBounds() const{
   std::cout << "UB: " << b.UB << std::endl;
   std::cout << "LB: " << b.LB << std::endl;
+}
+
+bool Coloring::setBackupVar(int nNodesSameCl, int nInCliqueBp){
+	cl.nNodesSameCl = 0;
+	cl.nInCliqueBp = 0;
+
+	return true;
 }
 
 bool Coloring::setClique(long nodesInClique, long nCliques, bool newClique){
@@ -573,8 +593,11 @@ bool Coloring::initVar(){
     return false;
   }
 
-  cl.nNodesSameCl = 0;
-  cl.nInCliqueBp = 0;
+  if(!setBackupVar(0, 0)){
+    std::cout << "setting backup variables" << std::endl;
+    
+    return false;
+  }
 
   if(!setBacktracking(false, 0, 0)){
     std::cout << "error while setting init backtracking" << std::endl;
@@ -652,16 +675,19 @@ Vertex Coloring::passVSS(){
   std::vector<Vertex> vertMaxSatDeg;
   Vertex vTmp, node = 0;
 
+  //std::cout << "TEST H1 " << std::endl;
   maxSatDeg = findMaxSatDeg();
 
   vertMaxSatDeg = findVertexSatDeg(maxSatDeg);
 
+  //std::cout << "TEST H2 " << std::endl;
   if(curr.nColors - maxSatDeg < parm.threshold){
     std::sort(vertMaxSatDeg.begin(), vertMaxSatDeg.end(), boost::bind(&Coloring::compareDegree, this, _1, _2));
 
     return vertMaxSatDeg.back();
   }
 
+  //std::cout << "TEST H3 " << std::endl;
   for(unsigned int i = 0; i < vertMaxSatDeg.size(); i++){
     vTmp = vertMaxSatDeg[i];
 
@@ -672,11 +698,15 @@ Vertex Coloring::passVSS(){
       node = vTmp;
     }
   }
+  //std::cout << "TEST H4 " << std::endl;
+  //std::cout << "vertMaxSatDeg.size = " << vertMaxSatDeg.size() << std::endl;
+  //std::cout << "maxSum = " << maxSum << std::endl;
 
   if(maxSum == 0){
     return vertMaxSatDeg.back();
   }
 
+  //std::cout << "TEST H5 " << std::endl;
   return node;
 }
 
@@ -710,8 +740,14 @@ int Coloring::findMaxSatDeg(){
   int maxSatDeg = 0;
   
   for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
-    if(pm.g[*vIt1] > maxSatDeg && pm.c[*vIt1] == 0 && pm.cl[*vIt1] != 1){
-      maxSatDeg = pm.g[*vIt1];
+	if(parm.wStartCl){
+		if(pm.g[*vIt1] > maxSatDeg && pm.c[*vIt1] == 0 && pm.cl[*vIt1] != 1){
+			maxSatDeg = pm.g[*vIt1];
+		}
+	}else{
+		if(pm.g[*vIt1] > maxSatDeg && pm.c[*vIt1] == 0){
+			maxSatDeg = pm.g[*vIt1];
+		}
     }
   }
 
@@ -723,9 +759,15 @@ std::vector<Vertex> Coloring::findVertexSatDeg(int satDeg){
   std::vector<Vertex> vertSatDeg;
 
   for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
-    if(pm.g[*vIt1] == satDeg && pm.c[*vIt1] == 0 && pm.cl[*vIt1] != 1){
-      vertSatDeg.push_back(*vIt1);
-    }
+	if(parm.wStartCl){
+		if(pm.g[*vIt1] == satDeg && pm.c[*vIt1] == 0 && pm.cl[*vIt1] != 1){
+			vertSatDeg.push_back(*vIt1);
+		}
+	}else{
+		if(pm.g[*vIt1] == satDeg && pm.c[*vIt1] == 0){
+			vertSatDeg.push_back(*vIt1);
+		}
+	}
   }
 
   return vertSatDeg;

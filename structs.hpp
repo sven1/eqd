@@ -63,6 +63,7 @@ struct Parameters {
   char eqDsatur;
   int INIT_SRAND;
   double pNewCl;
+  bool wStartCl;
 };
 
 struct Time {

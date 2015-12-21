@@ -30,10 +30,11 @@ class Coloring {
 
     bool setTime();
     bool setBounds(int LB, int UB);
+	bool setBackupVar(int nNodesSameCl, int nInCliqueBp);
     bool setClique(long nodesInClique, long nCliques, bool newClique);
     bool setCurr(int c, int r, Vertex node, int uncoloredVertices, int T, int M, long nColors, bool createNewGraphs);
     bool setBacktracking(bool status, Vertex node, int toRank);
-    bool setParm(long n = 40, double p = 0.5, long npr = 1, long tl = 3600, long th = 2, std::string res = "res/queen7_7.col", long nrg = 200, char variant = 'R');
+    bool setParm(long n = 40, double p = 0.5, long npr = 1, long tl = 3600, long th = 2, std::string res = "res/queen7_7.col", long nrg = 200, char variant = 'R', double pNewCl = 0.5);
     bool setTandM(int T, int M);
 
     bool findMaxClique(std::vector<Vertex> &clq, Vertex v, bool uncolored, bool inNoOtherClique);

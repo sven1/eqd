@@ -5,29 +5,34 @@
 
 bool Input::readInputArgs(int argc, char** argv, Parameters &p){
   if(argc < 2){
-    std::cout << "No Variant" << std::endl;
+    std::cout << "no mode" << std::endl;
 
     return false;
+  }else if(argc == 2){
+	std::cout << "no variant" << std::endl;
+
+	return false;
   }else{
     if(std::string(argv[1]) == "N"){
-      if(argc != 8){
+      if(argc != 9){
         std::cout << "Missing some arguments in (N)ormal mode" << std::endl;
 
         return false;
       }else{
         p.eqDsatur = *argv[2];
         p.nPruningRule = atol(argv[3]);
-        p.pNewCl = atof(argv[7]);
         p.timeLimit = atol(argv[4]);
         p.threshold = atol(argv[5]);
         p.ressource = argv[6];
+        p.pNewCl = atof(argv[7]);
+		p.wStartCl = atoi(argv[8]); 
         p.variant = 'N';
         p.n = 0;
         p.p = 0;
-	      p.INIT_SRAND = 0;
+	    p.INIT_SRAND = 0;
       }
     }else if(std::string(argv[1]) == "R"){
-      if(argc != 10){
+      if(argc != 12){
         std::cout << "Missing some arguments in (R)andom mode" << std::endl;
 
         return false;
@@ -39,9 +44,10 @@ bool Input::readInputArgs(int argc, char** argv, Parameters &p){
         p.nRandomGraphs = atol(argv[6]);
         p.n = atol(argv[7]);
         p.p = atof(argv[8]);
-        p.variant = 'R';
-	      p.INIT_SRAND = atoi(argv[9]);
+	    p.INIT_SRAND = atoi(argv[9]);
         p.pNewCl = atof(argv[10]);
+		p.wStartCl = atoi(argv[11]); 
+        p.variant = 'R';
       }
     }else{
       std::cout << "Not a valid Variant" << std::endl;
