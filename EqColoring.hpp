@@ -13,7 +13,7 @@ class EqColoring : Coloring{
     long haha1;
 
     bool initPrevGraphsFF();
-    void initBackupGraphs(int color);
+    bool initBackupGraphs(int color);
 
     bool initA1();
     bool initA2andA3(int l);
