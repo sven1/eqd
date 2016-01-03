@@ -11,6 +11,11 @@
 #include "structs.hpp"
 #include <string>
 
+/**
+ * \class Input
+ * \brief class to read a graph or input args
+ */
+
 class Input{
   private:
     static bool readGraph(const std::string &filename, const std::string &sType , Graph &g);

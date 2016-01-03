@@ -24,29 +24,57 @@
 
 using namespace boost;
 
+/**
+ * \brief property for a vertex that represents to which clique the vertex belongs
+ */
+
 struct clique_t {
     typedef vertex_property_tag kind;
 };
+
+/**
+ * \brief property for a vertex that stores all neighbours for the vertex
+ */
 
 struct nachbarn_t {
     typedef vertex_property_tag kind;
 };
 
+/**
+ * \brief property for a vertex that stores all forbidden colors for this vertex. I.e. colors that a vertex could not use
+ */
+
 struct fb_colors_t {
     typedef vertex_property_tag kind;
 };
+
+/**
+ * \brief property for a vertex that stores all available colors for this vertex. I.e. colors that this vertex can use
+ */
 
 struct av_color_t {
     typedef vertex_property_tag kind;
 };
 
+/**
+ * \brief property for a vertex that stores the rank, i.e. the time (step) when he was colored
+ */
+
 struct rank_t {
     typedef vertex_property_tag kind;
 };
 
+/**
+ * \brief property for a vertex that stores the saturation degree for this vertex
+ */
+
 struct grad_t {
     typedef vertex_property_tag kind;
 };
+
+/**
+ * \brief property for a vertex in a backup graph that stores the corresponding vertex in the original graph (if existant)
+ */
 
 struct ref_vertex_t {
     typedef vertex_property_tag kind;

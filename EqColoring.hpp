@@ -13,6 +13,11 @@
 #include "structs.hpp"
 #include "Coloring.hpp"
 
+/**
+ * \class EqColoring
+ * \brief class for coloring a graph instance in equitable color classes (differ at most by one)
+ */
+
 class EqColoring : Coloring{
   private:
     prevGraphs gf;

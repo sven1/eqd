@@ -10,6 +10,11 @@
 #include "boost.hpp"
 #include "structs.hpp"
 
+/**
+ * \class Heuristic
+ * \brief class that contains some heuristics for graphs
+ */
+
 class Heuristic{
   private:
     static double rn(const double LB, const double UB);
