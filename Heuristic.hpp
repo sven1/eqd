@@ -1,3 +1,12 @@
+/**
+ * \file Heuristic.hpp
+ * \author Sven Förster
+ * \date 29.12.2015
+ *
+ * \version 1.0.0
+ * cleaning code
+ */
+
 #include "boost.hpp"
 #include "structs.hpp"
 

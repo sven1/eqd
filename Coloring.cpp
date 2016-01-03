@@ -72,7 +72,7 @@ bool Coloring::initCliques(){
 		colorClique(startClique, 1);
 	}
 
-  //findIndepCliques(indClq, true, true);
+  findIndepCliques(indClq, true, true);
 
   //printClique(startClique);
   //printIndepCliques(indClq);

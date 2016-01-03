@@ -1,3 +1,12 @@
+/**
+ * \file EqColoring.hpp
+ * \author Sven Förster
+ * \date 29.12.2015
+ *
+ * \version 1.0.0
+ * cleaning code
+ */
+
 #ifndef EQCOLORING_HPP
 #define EQCOLORING_HPP
 
