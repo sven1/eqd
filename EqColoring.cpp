@@ -116,14 +116,16 @@ bool EqColoring::initA1(){
   EdgeFord eF1, eF2;
 
   for(int i = 1; i <= gf.uncoloredVertices; i++){
-    eF1 = add_edge(gf.vert[0], gf.vert[i], gf.g).first;
-    eF2 = add_edge(gf.vert[i], gf.vert[0], gf.g).first;
+	if(edge(gf.vert[0], gf.vert[i], gf.g).second == false){
+		eF1 = add_edge(gf.vert[0], gf.vert[i], gf.g).first;
+		eF2 = add_edge(gf.vert[i], gf.vert[0], gf.g).first;
 
-    pmf.re[eF1] = eF2;
-    pmf.re[eF2] = eF1;
+		pmf.re[eF1] = eF2;
+		pmf.re[eF2] = eF1;
 
-    pmf.c[eF1] = 1;
-    pmf.c[eF2] = 0;
+		pmf.c[eF1] = 1;
+		pmf.c[eF2] = 0;
+	}
   }
 
   return true;
@@ -147,27 +149,30 @@ bool EqColoring::initA2andA3(int l){
 	        //Vorknoten von Farbe k der i-ten Clique
           tmpIndex = gf.uncoloredVertices + (k + 1) + i * color; 
 
-          eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
-          eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
+		  if(edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).second == false){
+			eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
+			eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
 
-          pmf.re[eF1] = eF2;
-          pmf.re[eF2] = eF1;
+			pmf.re[eF1] = eF2;
+			pmf.re[eF2] = eF1;
 
-          pmf.c[eF1] = 1;
-          pmf.c[eF2] = 0;
+			pmf.c[eF1] = 1;
+			pmf.c[eF2] = 0;
+		  }
 
           //zur Farbe
           colorPos = gf.uncoloredVertices + (k + 1) + cl.nCliques * color; 
-			if(edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).second == false){
-          eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
-          eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
+		  
+		  if(edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).second == false){
+			eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
+			eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
 
-          pmf.re[eF1] = eF2;
-          pmf.re[eF2] = eF1;
+			pmf.re[eF1] = eF2;
+			pmf.re[eF2] = eF1;
 
-          pmf.c[eF1] = 1;
-          pmf.c[eF2] = 0;
-			}
+			pmf.c[eF1] = 1;
+			pmf.c[eF2] = 0;
+		  }
         }
       }
 
@@ -183,25 +188,29 @@ bool EqColoring::initA2andA3(int l){
         if(pm.fbc[*vIt1][k] == 0){
           tmpIndex = gf.uncoloredVertices + (k + 1) + (cl.nCliques - 1) * color; 
 
-          eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
-          eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
+		  if(edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).second == false){
+			eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
+			eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
 
-          pmf.re[eF1] = eF2;
-          pmf.re[eF2] = eF1;
+			pmf.re[eF1] = eF2;
+			pmf.re[eF2] = eF1;
 
-          pmf.c[eF1] = 1;
-          pmf.c[eF2] = 0;
+			pmf.c[eF1] = 1;
+			pmf.c[eF2] = 0;
+		  }
 
           colorPos = gf.uncoloredVertices + (k + 1) + cl.nCliques * color; 
 
-          eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
-          eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
+		  if(edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).second == false){
+			eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
+			eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
 
-          pmf.re[eF1] = eF2;
-          pmf.re[eF2] = eF1;
+			pmf.re[eF1] = eF2;
+			pmf.re[eF2] = eF1;
 
-          pmf.c[eF1] = gf.uncoloredVertices - (cl.nodesInClique - startClique.size());
-          pmf.c[eF2] = 0;
+			pmf.c[eF1] = gf.uncoloredVertices - (cl.nodesInClique - startClique.size());
+			pmf.c[eF2] = 0;
+		  }
         }
       }
 
@@ -242,24 +251,28 @@ int EqColoring::initA4(int l){
     colorPos = gf.uncoloredVertices + i + cl.nCliques * color; 
 
     //von Farben zur alten Senke
-    eF1 = add_edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
-    eF2 = add_edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
+	if(edge(gf.vert[colorPos], gf.vert[n-1], gf.g).second == false){
+		eF1 = add_edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
+		eF2 = add_edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
 
-    pmf.re[eF1] = eF2;
-    pmf.re[eF2] = eF1;
+		pmf.re[eF1] = eF2;
+		pmf.re[eF2] = eF1;
 
-    pmf.c[eF1] = rU - rL;
-    pmf.c[eF2] = 0;
+		pmf.c[eF1] = rU - rL;
+		pmf.c[eF2] = 0;
+	}
 
     //von Farben zur neuen Senke
-    eF1 = add_edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
-    eF2 = add_edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
+	if(edge(gf.vert[colorPos], gf.vert[nNew-1], gf.g).second == false){
+		eF1 = add_edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
+		eF2 = add_edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
 
-    pmf.re[eF1] = eF2;
-    pmf.re[eF2] = eF1;
+		pmf.re[eF1] = eF2;
+		pmf.re[eF2] = eF1;
 
-    pmf.c[eF1] = rL;
-    pmf.c[eF2] = 0;
+		pmf.c[eF1] = rL;
+		pmf.c[eF2] = 0;
+	}
   }
 
   return sumLB;
@@ -270,24 +283,28 @@ bool EqColoring::initRespectLB(int sumLB){
   int n = gf.n, nNew = gf.nNew;
 
   //von neuer Quelle zur alten Senke
-  eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
-  eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
+  if(edge(gf.vert[nNew-2], gf.vert[n-1], gf.g).second == false){
+	eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
+	eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
 
-  pmf.re[eF1] = eF2;
-  pmf.re[eF2] = eF1;
+	pmf.re[eF1] = eF2;
+	pmf.re[eF2] = eF1;
 
-  pmf.c[eF1] = sumLB;
-  pmf.c[eF2] = 0;
+	pmf.c[eF1] = sumLB;
+	pmf.c[eF2] = 0;
+  }
 
   //von alter Senke zur alten Quelle
-  eF1 = add_edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
-  eF2 = add_edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
+  if(edge(gf.vert[n-1], gf.vert[0], gf.g).second == false){
+	eF1 = add_edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
+	eF2 = add_edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
 
-  pmf.re[eF1] = eF2;
-  pmf.re[eF2] = eF1;
+	pmf.re[eF1] = eF2;
+	pmf.re[eF2] = eF1;
 
-  pmf.c[eF1] = INT_MAX;
-  pmf.c[eF2] = 0;
+	pmf.c[eF1] = INT_MAX;
+	pmf.c[eF2] = 0;
+  }
 
   return true;
 }
@@ -306,50 +323,60 @@ bool EqColoring::removeRespectLB(int l, int sumLB){
 
     if(rL < 0){
       rL = 0;
+
+	  return false;
     }
 
     colorPos = gf.uncoloredVertices + i + cl.nCliques * color; 
 
     //von Farbe zur alten Senke
-    eF1 = edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
-    eF2 = edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
+	if(edge(gf.vert[colorPos], gf.vert[n-1], gf.g).second == true){
+		eF1 = edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
+		eF2 = edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
 
-    pmf.c[eF1] = rU;
-    pmf.c[eF2] = 0;
+		pmf.c[eF1] = rU;
+		pmf.c[eF2] = 0;
 
-    pmf.rc[eF1] = rU - rL;
-    pmf.rc[eF2] = 0;
+		pmf.rc[eF1] = rU - rL;
+		pmf.rc[eF2] = 0;
+	}
 
     //von Farbe zur neuen Senke
-    eF1 = edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
-    eF2 = edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
+	if(edge(gf.vert[colorPos], gf.vert[nNew-1], gf.g).second == true){
+		eF1 = edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
+		eF2 = edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
 
-    pmf.c[eF1] = 0;
-    pmf.c[eF2] = 0;
+		pmf.c[eF1] = 0;
+		pmf.c[eF2] = 0;
 
-    pmf.rc[eF1] = 0;
-    pmf.rc[eF2] = 0;
+		pmf.rc[eF1] = 0;
+		pmf.rc[eF2] = 0;
+	}
   }
 
   //von alter Senke zur alten Quelle
-  eF1 = edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
-  eF2 = edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
+  if(edge(gf.vert[n-1], gf.vert[0], gf.g).second == true){
+	eF1 = edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
+	eF2 = edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
 
-  pmf.c[eF1] = 0;
-  pmf.c[eF2] = 0;
+	pmf.c[eF1] = 0;
+	pmf.c[eF2] = 0;
 
-  pmf.rc[eF1] = 0;
-  pmf.rc[eF2] = 0;
+	pmf.rc[eF1] = 0;
+	pmf.rc[eF2] = 0;
+  }
 
   //von neuer Quelle zur alten Senke
-  eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
-  eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
+  if(edge(gf.vert[nNew-2], gf.vert[n-1], gf.g).second == true){
+	eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
+	eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
 
-  pmf.c[eF1] = 0;
-  pmf.c[eF2] = 0;
+	pmf.c[eF1] = 0;
+	pmf.c[eF2] = 0;
 
-  pmf.rc[eF1] = 0;
-  pmf.rc[eF2] = 0;
+	pmf.rc[eF1] = 0;
+	pmf.rc[eF2] = 0;
+  }
 
   return true;
 }
@@ -402,7 +429,11 @@ bool EqColoring::pruneFF(int color){
   if(!(flow == gf.sumLB)){
 	return true;
   }else{
-    removeRespectLB(color, gf.sumLB);
+	  if(!removeRespectLB(color, gf.sumLB)){
+		std::cout << "error, should be pruned beforehand" << std::endl;
+
+		return true;
+	  }
     
     flow = performEKMF(gf.vert[0], gf.vert[gf.n - 1]);
 
