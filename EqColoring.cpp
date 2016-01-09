@@ -49,6 +49,8 @@ bool EqColoring::node(){
     if(curr.nColors < b.UB){
 	    if(checkEqColoring()){
 		    b.UB = curr.nColors;
+
+			//std::cout << "NEW UB = " << b.UB << std::endl;
 	    }
     }
 
@@ -63,6 +65,8 @@ bool EqColoring::node(){
         c.visitedNodes++;
 
         colorVertex(v, i);
+
+		//std::cout << c.visitedNodes << " Faerbe Knoten = " << v << " mit Farbe = " << i <<  std::endl;
 
         node(); 
        
@@ -87,38 +91,82 @@ bool EqColoring::node(){
 
   checkForBacktracking(v);
 
+  //std::cout << "BACKTRACK to = " << bt.toRank << std::endl;
+
   return false;
 }
 
 bool EqColoring::pruneFF(){
   t.startFF = std::clock();
   
-  for(unsigned int i = std::max(b.LB,curr.nColors); i < b.UB; i++){
+  for(unsigned int i = std::max(b.LB, curr.nColors); i < b.UB; i++){
+	t.startBuildNetwork = std::clock();
     if(!initBackupGraphs(i)){
+		t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
 		continue;
 	}
+    t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
+	//std::cout << "test for color = " << i << std::endl;
 
     c.nFF++;
 
     if(!pruneFF(i)){
       t.timeFF += (std::clock() - t.startFF) / (double) CLOCKS_PER_SEC;
 
+	  //std::cout << "work for color = " << i << std::endl;
       return false;
     }
   }
 
   t.timeFF += (std::clock() - t.startFF) / (double) CLOCKS_PER_SEC;
 
+	//std::cout << "no color suitable " << std::endl;
+
   return true;
 }
 
-bool EqColoring::initA1(){
+bool EqColoring::initNetwork(int colors){
   EdgeFord eF1, eF2;
 
-  for(int i = 1; i <= gf.uncoloredVertices; i++){
-	if(edge(gf.vert[0], gf.vert[i], gf.g).second == false){
-		eF1 = add_edge(gf.vert[0], gf.vert[i], gf.g).first;
-		eF2 = add_edge(gf.vert[i], gf.vert[0], gf.g).first;
+
+  //std::cout << "source <-> clique colors" << std::endl;
+  for(unsigned int i = 0; i < indClq.size(); i++){
+    for(unsigned int j = 0; j < gf.vertCliques[i].size(); j++){
+		eF1 = add_edge(gf.source1, gf.vertCliques[i][j], gf.g).first;
+		eF2 = add_edge(gf.vertCliques[i][j], gf.source1, gf.g).first;
+
+		pmf.re[eF1] = eF2;
+		pmf.re[eF2] = eF1;
+
+		pmf.c[eF1] = 1;
+		pmf.c[eF2] = 0;
+
+		//std::cout << "//clique nodes <-> clique colors" << std::endl;
+		for(int k=0; k<colors; k++){
+			if(pm.fbc[pmf.rf[gf.vertCliques[i][j]]][k] == 0){
+				eF1 = add_edge(gf.vertCliques[i][j], gf.vertCliquesColors[i][k], gf.g).first;
+				eF2 = add_edge(gf.vertCliquesColors[i][k], gf.vertCliques[i][j], gf.g).first;
+
+				pmf.re[eF1] = eF2;
+				pmf.re[eF2] = eF1;
+
+				pmf.c[eF1] = 1;
+				pmf.c[eF2] = 0;
+			}
+		}
+	}
+  }
+
+  //std::cout << "clique colors <-> colors" << std::endl;
+  // clique colors <-> colors
+  for(unsigned int i=0; i<indClq.size(); i++){
+	  if(gf.vertCliques[i].size() == 0){
+		  std::cout << "A1: Clique leer" << std::endl;
+		  continue;
+	  }
+	for(int k=0; k<colors; k++){
+		eF1 = add_edge(gf.vertCliquesColors[i][k], gf.vertColors[k], gf.g).first;
+		eF2 = add_edge(gf.vertColors[k], gf.vertCliquesColors[i][k], gf.g).first;
 
 		pmf.re[eF1] = eF2;
 		pmf.re[eF2] = eF1;
@@ -128,285 +176,221 @@ bool EqColoring::initA1(){
 	}
   }
 
-  return true;
-}
+  //std::cout << "source <-> remaining vert" << std::endl;
+	// source <-> remaining vert
+	for(unsigned int i = 0; i<gf.vertRemaining.size(); i++){
+		eF1 = add_edge(gf.source1, gf.vertRemaining[i], gf.g).first;
+		eF2 = add_edge(gf.vertRemaining[i], gf.source1, gf.g).first;
 
-bool EqColoring::initA2andA3(int l){
-  EdgeFord eF1, eF2;
-  VertexFordIter vIt1, vIt2;
+		pmf.re[eF1] = eF2;
+		pmf.re[eF2] = eF1;
 
-  int aUVPos = 1;
-  int tmpIndex, colorPos;
-  int color = l;
+		pmf.c[eF1] = 1;
+		pmf.c[eF2] = 0;
+	}
 
-  for(unsigned int i = 0; i < indClq.size(); i++){
-    for(unsigned int j = 0; j < indClq[i].size(); j++){
-      pmf.rf[gf.vert[aUVPos]] = indClq[i][j];
+  //std::cout << "remaining vert <-> colors" << std::endl;
+	// remaining vert <-> colors
+	for(unsigned int i = 0; i<gf.vertRemaining.size(); i++){
+		for(int k=0; k<colors; k++){
+			if(pm.fbc[pmf.rf[gf.vertRemaining[i]]][k] == 0){
+				eF1 = add_edge(gf.vertRemaining[i], gf.vertColors[k], gf.g).first;
+				eF2 = add_edge(gf.vertColors[k], gf.vertRemaining[i], gf.g).first;
 
-      for(int k = 0; k < color; k++){
-        if(pm.fbc[indClq[i][j]][k] == 0){
+				pmf.re[eF1] = eF2;
+				pmf.re[eF2] = eF1;
 
-	        //Vorknoten von Farbe k der i-ten Clique
-          tmpIndex = gf.uncoloredVertices + (k + 1) + i * color; 
+				pmf.c[eF1] = 1;
+				pmf.c[eF2] = 0;
+			}
+		}
+	}
+	
+  //std::cout << "colors <-> target" << std::endl;
+  for(int k=0; k<colors; k++){
+	int rU = ceil(parm.n*1. / colors);
+    int rL = floor(parm.n*1. / colors);
 
-		  if(edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).second == false){
-			eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
-			eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
+    rU -= cc.n[k];
+    rL -= cc.n[k];
 
-			pmf.re[eF1] = eF2;
-			pmf.re[eF2] = eF1;
+	if(rL < 0){
+		rL = 0;
+	}
 
-			pmf.c[eF1] = 1;
-			pmf.c[eF2] = 0;
-		  }
+	gf.sumLB += rL;
 
-          //zur Farbe
-          colorPos = gf.uncoloredVertices + (k + 1) + cl.nCliques * color; 
-		  
-		  if(edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).second == false){
-			eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
-			eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
-
-			pmf.re[eF1] = eF2;
-			pmf.re[eF2] = eF1;
-
-			pmf.c[eF1] = 1;
-			pmf.c[eF2] = 0;
-		  }
-        }
-      }
-
-      aUVPos++;
-    }
-  }
-
-  for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
-    if(pm.c[*vIt1] == 0 && pm.cl[*vIt1] == 0){
-      pmf.rf[gf.vert[aUVPos]] = *vIt1;
-
-      for(int k = 0; k < color; k++){
-        if(pm.fbc[*vIt1][k] == 0){
-          tmpIndex = gf.uncoloredVertices + (k + 1) + (cl.nCliques - 1) * color; 
-
-		  if(edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).second == false){
-			eF1 = add_edge(gf.vert[aUVPos], gf.vert[tmpIndex], gf.g).first;
-			eF2 = add_edge(gf.vert[tmpIndex], gf.vert[aUVPos], gf.g).first;
-
-			pmf.re[eF1] = eF2;
-			pmf.re[eF2] = eF1;
-
-			pmf.c[eF1] = 1;
-			pmf.c[eF2] = 0;
-		  }
-
-          colorPos = gf.uncoloredVertices + (k + 1) + cl.nCliques * color; 
-
-		  if(edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).second == false){
-			eF1 = add_edge(gf.vert[tmpIndex], gf.vert[colorPos], gf.g).first;
-			eF2 = add_edge(gf.vert[colorPos], gf.vert[tmpIndex], gf.g).first;
-
-			pmf.re[eF1] = eF2;
-			pmf.re[eF2] = eF1;
-
-			pmf.c[eF1] = gf.uncoloredVertices - (cl.nodesInClique - startClique.size());
-			pmf.c[eF2] = 0;
-		  }
-        }
-      }
-
-      aUVPos++;
-    }
-  }
-
-  if(aUVPos != gf.uncoloredVertices + 1){
-    std::cout << "aUVPos = " << aUVPos << " and uncoloredVertices = " << curr.uncoloredVertices << std::endl;
-    std::cout << "error while constructing network" << std::endl;
-    std::cout << "not using all uncolored Vertices" << std::endl;
-
-    return false;
-  }
-
-  return true;
-}
-
-int EqColoring::initA4(int l){
-  int sumLB = 0, rU, rL, colorPos, n = gf.n, nNew = gf.nNew, color = l;
-  EdgeFord eF1, eF2;
-
-  for(int i = 1; i <= color; i++){
-    rU = ceil(parm.n / color);
-    rL = floor(parm.n / color);
-
-    rU -= cc.n[i-1];
-    rL -= cc.n[i-1];
-
-    if(rL < 0){
-      rL = 0;
-
-	  return 0;
-    }
-
-    sumLB += rL;
-
-    colorPos = gf.uncoloredVertices + i + cl.nCliques * color; 
-
-    //von Farben zur alten Senke
-	if(edge(gf.vert[colorPos], gf.vert[n-1], gf.g).second == false){
-		eF1 = add_edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
-		eF2 = add_edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
+		eF1 = add_edge(gf.vertColors[k], gf.target1, gf.g).first;
+		eF2 = add_edge(gf.target1, gf.vertColors[k], gf.g).first;
 
 		pmf.re[eF1] = eF2;
 		pmf.re[eF2] = eF1;
 
 		pmf.c[eF1] = rU - rL;
 		pmf.c[eF2] = 0;
-	}
 
-    //von Farben zur neuen Senke
-	if(edge(gf.vert[colorPos], gf.vert[nNew-1], gf.g).second == false){
-		eF1 = add_edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
-		eF2 = add_edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
+		eF1 = add_edge(gf.vertColors[k], gf.target2, gf.g).first;
+		eF2 = add_edge(gf.target2, gf.vertColors[k], gf.g).first;
 
 		pmf.re[eF1] = eF2;
 		pmf.re[eF2] = eF1;
 
 		pmf.c[eF1] = rL;
 		pmf.c[eF2] = 0;
-	}
   }
 
-  return sumLB;
-}
-
-bool EqColoring::initRespectLB(int sumLB){
-  EdgeFord eF1, eF2;
-  int n = gf.n, nNew = gf.nNew;
-
-  //von neuer Quelle zur alten Senke
-  if(edge(gf.vert[nNew-2], gf.vert[n-1], gf.g).second == false){
-	eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
-	eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
+	eF1 = add_edge(gf.target1, gf.source1, gf.g).first;
+	eF2 = add_edge(gf.source1, gf.target1, gf.g).first;
 
 	pmf.re[eF1] = eF2;
 	pmf.re[eF2] = eF1;
 
-	pmf.c[eF1] = sumLB;
+	pmf.c[eF1] = gf.uncoloredVertices;
 	pmf.c[eF2] = 0;
-  }
 
-  //von alter Senke zur alten Quelle
-  if(edge(gf.vert[n-1], gf.vert[0], gf.g).second == false){
-	eF1 = add_edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
-	eF2 = add_edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
+	eF1 = add_edge(gf.source2, gf.target1, gf.g).first;
+	eF2 = add_edge(gf.target1, gf.source2, gf.g).first;
 
 	pmf.re[eF1] = eF2;
 	pmf.re[eF2] = eF1;
 
-	pmf.c[eF1] = INT_MAX;
+	pmf.c[eF1] = gf.sumLB;
 	pmf.c[eF2] = 0;
-  }
 
-  return true;
+	return true;
 }
 
-bool EqColoring::removeRespectLB(int l, int sumLB){
-  int rL, rU, colorPos, n = gf.n, nNew = gf.nNew, color = l;
-
+bool EqColoring::initNetwork2(int colors){
   EdgeFord eF1, eF2;
 
-  for(int i = 1; i <= color; i++){
-    rU = ceil(parm.n / color);
-    rL = floor(parm.n / color);
+	eF1 = edge(gf.source2, gf.target1, gf.g).first;
+	eF2 = edge(gf.target1, gf.source2, gf.g).first;
 
-    rU -= cc.n[i-1];
-    rL -= cc.n[i-1];
+	pmf.c[eF1] = 0;
+	pmf.c[eF2] = 0;
 
-    if(rL < 0){
-      rL = 0;
+	pmf.rc[eF1] = 0;
+	pmf.rc[eF2] = 0;
 
-	  return false;
-    }
+	eF1 = edge(gf.source1, gf.target1, gf.g).first;
+	eF2 = edge(gf.target1, gf.source1, gf.g).first;
 
-    colorPos = gf.uncoloredVertices + i + cl.nCliques * color; 
+	pmf.c[eF1] = 0;
+	pmf.c[eF2] = 0;
 
-    //von Farbe zur alten Senke
-	if(edge(gf.vert[colorPos], gf.vert[n-1], gf.g).second == true){
-		eF1 = edge(gf.vert[colorPos], gf.vert[n - 1], gf.g).first;
-		eF2 = edge(gf.vert[n - 1], gf.vert[colorPos], gf.g).first;
+	pmf.rc[eF1] = 0;
+	pmf.rc[eF2] = 0;
 
-		pmf.c[eF1] = rU;
-		pmf.c[eF2] = 0;
 
-		pmf.rc[eF1] = rU - rL;
-		pmf.rc[eF2] = 0;
-	}
+	for(int k=0; k<colors; k++){
+		int rU = ceil(parm.n*1. / colors);
+		int rL = floor(parm.n*1. / colors);
 
-    //von Farbe zur neuen Senke
-	if(edge(gf.vert[colorPos], gf.vert[nNew-1], gf.g).second == true){
-		eF1 = edge(gf.vert[colorPos], gf.vert[nNew - 1], gf.g).first;
-		eF2 = edge(gf.vert[nNew - 1], gf.vert[colorPos], gf.g).first;
+		rU -= cc.n[k];
+		rL -= cc.n[k];
+
+		if(rL < 0){
+			rL = 0;
+		}
+
+		eF1 = edge(gf.vertColors[k], gf.target2, gf.g).first;
+		eF2 = edge(gf.target2, gf.vertColors[k], gf.g).first;
 
 		pmf.c[eF1] = 0;
 		pmf.c[eF2] = 0;
 
 		pmf.rc[eF1] = 0;
 		pmf.rc[eF2] = 0;
+
+		eF1 = edge(gf.vertColors[k], gf.target1, gf.g).first;
+		eF2 = edge(gf.target1, gf.vertColors[k], gf.g).first;
+
+		pmf.c[eF1] = rU;
+		pmf.c[eF2] = 0;
 	}
-  }
 
-  //von alter Senke zur alten Quelle
-  if(edge(gf.vert[n-1], gf.vert[0], gf.g).second == true){
-	eF1 = edge(gf.vert[n - 1], gf.vert[0], gf.g).first;
-	eF2 = edge(gf.vert[0], gf.vert[n - 1], gf.g).first;
-
-	pmf.c[eF1] = 0;
-	pmf.c[eF2] = 0;
-
-	pmf.rc[eF1] = 0;
-	pmf.rc[eF2] = 0;
-  }
-
-  //von neuer Quelle zur alten Senke
-  if(edge(gf.vert[nNew-2], gf.vert[n-1], gf.g).second == true){
-	eF1 = add_edge(gf.vert[nNew - 2], gf.vert[n - 1], gf.g).first;
-	eF2 = add_edge(gf.vert[n - 1], gf.vert[nNew - 2], gf.g).first;
-
-	pmf.c[eF1] = 0;
-	pmf.c[eF2] = 0;
-
-	pmf.rc[eF1] = 0;
-	pmf.rc[eF2] = 0;
-  }
-
-  return true;
+	return true;
 }
 
 bool EqColoring::initBackupGraphs(int color){
   gf.g.clear();
-  gf.vert.clear();
+  gf.vertCliques.clear();
+  gf.vertCliquesColors.clear();
+  gf.vertColors.clear();
+  gf.vertRemaining.clear();
 
   gf.uncoloredVertices = curr.uncoloredVertices;
-  gf.n = 1 + curr.uncoloredVertices + cl.nCliques * color + color + 1;
+  if(parm.wStartCl){
+	gf.n = 1 + curr.uncoloredVertices + (cl.nCliques-1) * color + color + 1;
+  }else{
+	gf.n = 1 + curr.uncoloredVertices + cl.nCliques * color + color + 1;
+  }
   gf.nNew = gf.n + 2;
 
-  for(int j = 0; j < gf.nNew; j++){
-    gf.vert.push_back(add_vertex(gf.g));
-  }
-    
-  initA1();
-  
-  initA2andA3(color);
-    
-  int sumLB = initA4(color);
+  // add source node for phase 1
+  gf.source1 = add_vertex(gf.g);
+  int counterTmp = 0;
 
-  if(sumLB == 0){
+  //add nodes in cliques for phase one
+  gf.vertCliques.resize(indClq.size());
+  for(unsigned int i = 0; i < indClq.size(); i++){
+    for(unsigned int j = 0; j < indClq[i].size(); j++){
+		if(pm.c[indClq[i][j]] == 0){
+			gf.vertCliques[i].push_back(add_vertex(gf.g));
+			pmf.rf[gf.vertCliques[i].back()] = indClq[i][j];
+			counterTmp++;
+		}else{
+			std::cout << "ERROR WITH INDCLQ" << std::endl;
+		}
+	}
+  }
+
+  //add remaining nodes (not in cliques)
+  vertexIter vIt1, vIt2;
+  for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
+	if(pm.c[*vIt1] == 0 && pm.cl[*vIt1] == 0){
+		gf.vertRemaining.push_back(add_vertex(gf.g));
+		pmf.rf[gf.vertRemaining.back()] = *vIt1;
+		counterTmp++;
+	}
+  }
+  
+  if(counterTmp != gf.uncoloredVertices){
+	  std::cout << "error uncolored vertices != counter" << std::endl;
+  }
+
+  //add nodes for colors for cliques for phase one
+  gf.vertCliquesColors.resize(indClq.size());
+  for(unsigned int i = 0; i < indClq.size(); i++){
+	  if(gf.vertCliques[i].size() == 0){
+		  std::cout << "Groesse war NULL" << std::endl;
+		continue;
+	  }
+    for(unsigned int j = 0; j < (unsigned) color; j++){
+		gf.vertCliquesColors[i].push_back(add_vertex(gf.g));
+	}
+  }
+
+  // add color nodes
+  for(unsigned int i = 0; i < (unsigned) color; i++){
+	gf.vertColors.push_back(add_vertex(gf.g));
+  }
+  
+  // add target node for phase 1
+  gf.target1 = add_vertex(gf.g);
+
+  // add source node for phase 2
+  gf.source2 = add_vertex(gf.g);
+  // add target node for phase 2
+  gf.target2 = add_vertex(gf.g);
+
+  gf.sumLB = 0;
+
+  if(!initNetwork(color)){
+	std::cout << "initNetwork error" << std::endl;
 	return false;
   }
 
-  initRespectLB(sumLB);
-
-  gf.sumLB = sumLB;
- 
   return true;
 }
 
@@ -424,20 +408,18 @@ void EqColoring::resetCap(){
 bool EqColoring::pruneFF(int color){
   long flow;
 
-  flow = performEKMF(gf.vert[gf.nNew - 2], gf.vert[gf.nNew - 1]);
+  flow = performEKMF(gf.source2, gf.target2);
 
+  //std::cout << "flow = " << flow << " sumLB = " << gf.sumLB << std::endl;
   if(!(flow == gf.sumLB)){
 	return true;
   }else{
-	  if(!removeRespectLB(color, gf.sumLB)){
-		std::cout << "error, should be pruned beforehand" << std::endl;
-
-		return true;
-	  }
+	initNetwork2(color);
     
-    flow = performEKMF(gf.vert[0], gf.vert[gf.n - 1]);
+    flow = performEKMF(gf.source1, gf.target1);
 
-    if(flow == curr.uncoloredVertices){
+	//std::cout << "flow = " << flow << " uncoloredVertices = " << gf.uncoloredVertices << std::endl;
+    if(flow == gf.uncoloredVertices){
       return false;
     }else{
       return true;
@@ -563,6 +545,8 @@ bool EqColoring::nodeClique(){
     if(curr.nColors < b.UB){
 	    if(checkEqColoring()){
 		    b.UB = curr.nColors;
+
+			//std::cout << "NEW UB = " << b.UB << std::endl;
         
 			newUBBacktracking();
       }
@@ -582,6 +566,8 @@ bool EqColoring::nodeClique(){
 			c.visitedNodes++; 
 
 			colorVertex(v, i);
+
+			//std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << " visited node = " << c.visitedNodes <<  std::endl;
 
 			t.startUIC = std::clock();
 	        
@@ -609,12 +595,15 @@ bool EqColoring::nodeClique(){
         }
       }
     }else{
-    }
+    
+	}
   }else{
+
   }
 
   checkForBacktracking(v);
 
+  //std::cout << "BACKTRACK to = " << bt.toRank << std::endl;
   return false;
 }
 

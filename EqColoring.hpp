@@ -32,6 +32,8 @@ class EqColoring : Coloring{
     bool initA1();
     bool initA2andA3(int l);
     int initA4(int l);
+	bool initNetwork(int colors);
+	bool initNetwork2(int colors);
 
     bool initRespectLB(int sumLB);
     bool removeRespectLB(int l, int sumLB);

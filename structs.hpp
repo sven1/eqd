@@ -41,7 +41,16 @@ struct prevGraphs {
   Vertex dlNode; /**< last colored vertices */
   long dlColor; /**< last used color */
   int uncoloredVertices; /**< uncolored vertices */
-  std::vector<VertexFord> vert; /**< vector with all vertices used in the graph for the network i.e. FF */
+  //std::vector<VertexFord> vert; /**< vector with all vertices used in the graph for the network i.e. FF */
+  std::vector<std::vector<VertexFord> > vertCliques; /**< vector with all vertices used in the graph for the network i.e. FF */
+  std::vector<std::vector<VertexFord> > vertCliquesColors; /**< vector with all vertices used in the graph for the network i.e. FF */
+  std::vector<VertexFord> vertColors; /**< vector with all vertices used in the graph for the network i.e. FF */
+  std::vector<VertexFord> vertRemaining;
+  VertexFord source1;
+  VertexFord source2;
+  VertexFord target1;
+  VertexFord target2;
+  
   int n; /**< number of vertices for the first FF */
   int nNew; /**< number of vertices for the second FF */
   int sumLB; /**< sum of the lower bounds */
@@ -108,8 +117,10 @@ struct Time {
   double timeUIC; /**< time time to update the independent cliques */
   double timeFindIndCliques; /**< time to find indep. cliques */
   double timeTotal; /**< total time used by the program */
+  double timeBuildNetwork; /**< time to build the network */
   std::clock_t start; /**< timer for the whole program */
   std::clock_t startFF; /**< timer for FF */
+  std::clock_t startBuildNetwork; /**< timer for building network */
   std::clock_t startFIC; /**< timer for finding indep. cliques */
   std::clock_t startUIC; /**< timer for updating indep. cliques */
   bool timeout; /**< TRUE, if the program timeouted (overstep the time limit) */
