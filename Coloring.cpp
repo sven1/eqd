@@ -205,30 +205,30 @@ bool Coloring::removeVinIndClq(Vertex v, std::vector<std::vector<Vertex> > &indC
 
         indClq[i].erase(indClq[i].begin() + j);
 
-		if(indClq[i].size() == 0){
-		  indClq.erase(indClq.begin() + i);
-		}
-
-		cl.nodesInClique--;
-		pm.cl[v] = 0;
-		
 		//if(indClq[i].size() == 0){
-			//indClq.erase(indClq.begin() + i);
-			//cl.nodesInClique--;
-			//pm.cl[v] = 0;
-
-			//return true;
-		//}else if(indClq[i].size() == 1){
-			//cl.nodesInClique--;
-			//pm.cl[v] = 0;
-
-			//if(removeVinIndClq(indClq[i][0], indClq)){
-				//return true;
-			//}
+		  //indClq.erase(indClq.begin() + i);
 		//}
 
 		//cl.nodesInClique--;
 		//pm.cl[v] = 0;
+		
+		if(indClq[i].size() == 0){
+			indClq.erase(indClq.begin() + i);
+			cl.nodesInClique--;
+			pm.cl[v] = 0;
+
+			return true;
+		}else if(indClq[i].size() == 1){
+			cl.nodesInClique--;
+			pm.cl[v] = 0;
+
+			if(removeVinIndClq(indClq[i][0], indClq)){
+				return true;
+			}
+		}
+
+		cl.nodesInClique--;
+		pm.cl[v] = 0;
 
         return true;
 	  }

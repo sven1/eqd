@@ -53,6 +53,7 @@ bool EqColoring::node(){
 		    b.UB = curr.nColors;
 
 			//std::cout << "NEW UB = " << b.UB << std::endl;
+			newUBBacktracking();
 	    }
     }
 
@@ -578,9 +579,9 @@ bool EqColoring::nodeClique(){
 
   Vertex v = passVSS();
   
-  std::cout << "curr.uncoloredVertices = " << curr.uncoloredVertices << std::endl;
-  printClique(startClique);
-  printIndepCliques(indClq);
+  //std::cout << "curr.uncoloredVertices = " << curr.uncoloredVertices << std::endl;
+  //printClique(startClique);
+  //printIndepCliques(indClq);
 
   //std::cout << "n = " << parm.n << " M = " << curr.M << " T = " << curr.T << " max(nColors, b.LB) = " << std::max(curr.nColors,b.LB) << std::endl;
   if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
