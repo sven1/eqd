@@ -161,6 +161,7 @@ struct Cliques {
   bool newClique; /**< TRUE, if we use a new clique in the actual step */
   long nNodesSameCl; /**< number of nodes that are colored from the indep. cliques */
   long nInCliqueBp; /**< number of nodes in the independent cliques */
+  long vertInMinCl;
 };
 
 /**

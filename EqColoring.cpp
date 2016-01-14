@@ -5,6 +5,8 @@ EqColoring::EqColoring() : Coloring(){
 
 EqColoring::EqColoring(const Parameters &parm) : Coloring(parm){
   setBounds(b.LB, calcUB());
+  //b.LB = 3;
+  //b.UB = 5;
 
   if(parm.eqDsatur == 'N'){
     dsatur();
@@ -101,10 +103,16 @@ bool EqColoring::pruneFF(){
   
   for(unsigned int i = std::max(b.LB, curr.nColors); i < b.UB; i++){
 	t.startBuildNetwork = std::clock();
-    if(!initBackupGraphs(i)){
+
+	if(curr.M > ceil(parm.n*1./i)){
+		continue;
+	}
+    
+	if(!initBackupGraphs(i)){
 		t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
 		continue;
 	}
+
     t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
 	//std::cout << "test for color = " << i << std::endl;
 
@@ -469,13 +477,23 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
   findIndepCliques(indClq, true, true);
 
   if(sBetterClique == true){
-    if(cl.nodesInClique <= tmpCl.nodesInClique){
+    if(cl.nodesInClique < tmpCl.nodesInClique){
       cl = tmpCl;
       g = tmpG;
       indClq = tmpIndClq;
 
       return false;
-    }else{
+    }else if(cl.nodesInClique == tmpCl.nodesInClique){
+		if(cl.vertInMinCl < tmpCl.vertInMinCl){
+			cl = tmpCl;
+			g = tmpG;
+			indClq = tmpIndClq;
+
+			return false;
+		}else{
+			return true;
+		}
+	}else{
 		return true;
     }
   }
@@ -486,17 +504,17 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
 
 
 bool EqColoring::updateIndepCliques(Vertex &v){
-     if(cl.nodesInClique - startClique.size() == 0){
-      if(useNewIndepCliques(true)){
-        cl.nNodesSameCl = 0;
-        c.newCliques++;
+	 //if(cl.nodesInClique - startClique.size() == 0){
+      //if(useNewIndepCliques(true)){
+        //cl.nNodesSameCl = 0;
+        //c.newCliques++;
 
-        return true;
-      }else{
+        //return true;
+      //}else{
 		  //std::cout << "uncolored V = " << curr.uncoloredVertices << std::endl;
 		//std::cout << "KEINE BESSERE CLIQUE" << std::endl;
-	  }
-  }
+	  //}
+  //}
 
 	int tmp1=1;
 
@@ -551,13 +569,20 @@ bool EqColoring::nodeClique(){
 			newUBBacktracking();
       }
     }
-
+	//else{
+		//checkForBacktracking(curr.node);
+	//}
     
     return true;
   }
 
   Vertex v = passVSS();
+  
+  std::cout << "curr.uncoloredVertices = " << curr.uncoloredVertices << std::endl;
+  printClique(startClique);
+  printIndepCliques(indClq);
 
+  //std::cout << "n = " << parm.n << " M = " << curr.M << " T = " << curr.T << " max(nColors, b.LB) = " << std::max(curr.nColors,b.LB) << std::endl;
   if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
 	  if(!pruneFF()){	
 		for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
@@ -575,6 +600,8 @@ bool EqColoring::nodeClique(){
 	  
 			t.timeUIC += (std::clock() - t.startUIC) / (double) CLOCKS_PER_SEC;
 
+			//curr.node = v;
+
 			nodeClique(); 
 
 			if(t.timeout){
@@ -584,6 +611,11 @@ bool EqColoring::nodeClique(){
           if(bt.status){
             if(bt.toRank == curr.rank){
               bt.status = false;
+
+			  if(useNewIndepCliques(true)){
+				  cl.nNodesSameCl = 0;
+				  c.newCliques++;
+			  }
             }else if(bt.toRank < curr.rank){
               uncolorVertex(v);
 
