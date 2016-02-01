@@ -5,21 +5,32 @@ EqColoring::EqColoring() : Coloring(){
 
 EqColoring::EqColoring(const Parameters &parm) : Coloring(parm){
   setBounds(b.LB, calcUB());
-  //b.LB = 3;
-  //b.UB = 5;
 
-  if(parm.eqDsatur == 'N'){
-    dsatur();
-  }else if(parm.eqDsatur == 'C'){
-    initPrevGraphsFF();
+  // same bounds -> quit
+  if(b.LB != b.UB){
+	// start normal dsatur
+	if(parm.eqDsatur == 'N'){
+		dsatur();
+	// start dsatur with clique
+	}else if(parm.eqDsatur == 'C'){
+		//init property maps
+		initPrevGraphsFF();
 
-    dsaturClique();
+		dsaturClique();
+	}
   }
   
+  // calculate the exact total time
   calcTime();
 
+  // print relevant data
   printStudyRandomGraphs();
 }
+
+
+/**
+ * init property maps
+ */
 
 bool EqColoring::initPrevGraphsFF(){
   pmf.c = get(edge_capacity, gf.g);
@@ -42,13 +53,21 @@ EqColoring::~EqColoring(){
 
 }
 
+/**
+ * main function to traverse the searching tree (normal dsatur)
+ */
+
 bool EqColoring::node(){
+	// check if timeout is already reacher
   if(checkOvertime()){
     return true;
   }
 
+  // check if all nodes are already colored
   if(curr.uncoloredVertices == 0){
+	// check if the current coloring uses (weniger) nodes than the upper bound is
     if(curr.nColors < b.UB){
+		// check if the actual coloring is a equitable coloring
 	    if(checkEqColoring()){
 		    b.UB = curr.nColors;
 
@@ -60,27 +79,39 @@ bool EqColoring::node(){
     return true;
   }
   
+  //select a node
   Vertex v = passVSS();
 
+  //loop through all colors
   for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
-    if(pm.fbc[v][i - 1] == 0){
+    //check if the color can be applied to this node (i.e. check if the color is available for this node)
+	if(pm.fbc[v][i - 1] == 0){
+		// pruning rule from the paper
       if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
+		  // variable to count visited nodes in the searching tree
         c.visitedNodes++;
 
+		// color vertex with color i
         colorVertex(v, i);
 
 		//std::cout << c.visitedNodes << " Faerbe Knoten = " << v << " mit Farbe = " << i <<  std::endl;
 
+		// do the same again (recursive fnct.)
         node(); 
        
+		// check if we reached already the timeout
 	      if(t.timeout){
 	        return true;
 	      }
    
+		  //check if we do a backtrack at the moment
         if(bt.status){
+			//check if the rank we suppose to backtrack is the current rank of the node
           if(bt.toRank == curr.rank){
+			  // then stop backtracking
             bt.status = false;
           }else if(bt.toRank < curr.rank){
+			  // continue to backtrack
             uncolorVertex(v);
 
             return true;
@@ -92,6 +123,7 @@ bool EqColoring::node(){
     }
   }
 
+  // check if a backtrack is possible, if yes then do backtrack
   checkForBacktracking(v);
 
   //std::cout << "BACKTRACK to = " << bt.toRank << std::endl;
@@ -105,10 +137,12 @@ bool EqColoring::pruneFF(){
   for(unsigned int i = std::max(b.LB, curr.nColors); i < b.UB; i++){
 	t.startBuildNetwork = std::clock();
 
+	// check pruning rule
 	if(curr.M > ceil(parm.n*1./i)){
 		continue;
 	}
     
+	// initialize backup graph
 	if(!initBackupGraphs(i)){
 		t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
 		continue;
@@ -119,6 +153,7 @@ bool EqColoring::pruneFF(){
 
     c.nFF++;
 
+	// check for pruning rule with color i
     if(!pruneFF(i)){
       t.timeFF += (std::clock() - t.startFF) / (double) CLOCKS_PER_SEC;
 
@@ -131,12 +166,12 @@ bool EqColoring::pruneFF(){
 
 	//std::cout << "no color suitable " << std::endl;
 
+	// cant prune
   return true;
 }
 
 bool EqColoring::initNetwork(int colors){
   EdgeFord eF1, eF2;
-
 
   //std::cout << "source <-> clique colors" << std::endl;
   for(unsigned int i = 0; i < indClq.size(); i++){
@@ -248,6 +283,7 @@ bool EqColoring::initNetwork(int colors){
 		pmf.c[eF2] = 0;
   }
 
+  // tartget 1 <-> source 1
 	eF1 = add_edge(gf.target1, gf.source1, gf.g).first;
 	eF2 = add_edge(gf.source1, gf.target1, gf.g).first;
 
@@ -257,6 +293,7 @@ bool EqColoring::initNetwork(int colors){
 	pmf.c[eF1] = gf.uncoloredVertices;
 	pmf.c[eF2] = 0;
 
+	// source 2 <-> target 1
 	eF1 = add_edge(gf.source2, gf.target1, gf.g).first;
 	eF2 = add_edge(gf.target1, gf.source2, gf.g).first;
 
@@ -269,9 +306,14 @@ bool EqColoring::initNetwork(int colors){
 	return true;
 }
 
+/**
+ * remove dependencies for the second ford fulkerson
+ */
+
 bool EqColoring::initNetwork2(int colors){
   EdgeFord eF1, eF2;
 
+  // source 2 <-> target 1
 	eF1 = edge(gf.source2, gf.target1, gf.g).first;
 	eF2 = edge(gf.target1, gf.source2, gf.g).first;
 
@@ -281,6 +323,7 @@ bool EqColoring::initNetwork2(int colors){
 	pmf.rc[eF1] = 0;
 	pmf.rc[eF2] = 0;
 
+	// source 1 <-> target 1
 	eF1 = edge(gf.source1, gf.target1, gf.g).first;
 	eF2 = edge(gf.target1, gf.source1, gf.g).first;
 
@@ -290,7 +333,7 @@ bool EqColoring::initNetwork2(int colors){
 	pmf.rc[eF1] = 0;
 	pmf.rc[eF2] = 0;
 
-
+	// colors <-> target 2, target 1
 	for(int k=0; k<colors; k++){
 		int rU = ceil(parm.n*1. / colors);
 		int rL = floor(parm.n*1. / colors);
@@ -321,7 +364,12 @@ bool EqColoring::initNetwork2(int colors){
 	return true;
 }
 
+/**
+ * initialize the backup graph for a specific color which is given by the argument
+ */
+
 bool EqColoring::initBackupGraphs(int color){
+	// clear graph
   gf.g.clear();
   gf.vertCliques.clear();
   gf.vertCliquesColors.clear();
@@ -329,6 +377,8 @@ bool EqColoring::initBackupGraphs(int color){
   gf.vertRemaining.clear();
 
   gf.uncoloredVertices = curr.uncoloredVertices;
+
+  //if we use a start clique
   if(parm.wStartCl){
 	gf.n = 1 + curr.uncoloredVertices + (cl.nCliques-1) * color + color + 1;
   }else{
@@ -346,6 +396,7 @@ bool EqColoring::initBackupGraphs(int color){
     for(unsigned int j = 0; j < indClq[i].size(); j++){
 		if(pm.c[indClq[i][j]] == 0){
 			gf.vertCliques[i].push_back(add_vertex(gf.g));
+			//set relation between nodes for the graph in FF with the nodes from the main graph given by the input
 			pmf.rf[gf.vertCliques[i].back()] = indClq[i][j];
 			counterTmp++;
 		}else{
@@ -359,6 +410,7 @@ bool EqColoring::initBackupGraphs(int color){
   for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
 	if(pm.c[*vIt1] == 0 && pm.cl[*vIt1] == 0){
 		gf.vertRemaining.push_back(add_vertex(gf.g));
+		//set relation between nodes for the graph in FF with the nodes from the main graph given by the input
 		pmf.rf[gf.vertRemaining.back()] = *vIt1;
 		counterTmp++;
 	}
@@ -417,10 +469,12 @@ void EqColoring::resetCap(){
 bool EqColoring::pruneFF(int color){
   long flow;
 
+  //start ford fulkerson from source2 as source to target2 as target
   flow = performEKMF(gf.source2, gf.target2);
 
   //std::cout << "flow = " << flow << " sumLB = " << gf.sumLB << std::endl;
   if(!(flow == gf.sumLB)){
+	//there exist no a equitable coloring
 	return true;
   }else{
 	initNetwork2(color);
@@ -429,8 +483,10 @@ bool EqColoring::pruneFF(int color){
 
 	//std::cout << "flow = " << flow << " uncoloredVertices = " << gf.uncoloredVertices << std::endl;
     if(flow == gf.uncoloredVertices){
+	  //there exist a equitable coloring
       return false;
     }else{
+	  //there exist no a equitable coloring
       return true;
     }
   }
@@ -442,12 +498,14 @@ long EqColoring::performEKMF(VertexFord &vs, VertexFord &vt){
 
   Traits::vertex_descriptor s = vs, t = vt;
   
+  //boost function to perform a ford fulkerson
   long flow = edmonds_karp_max_flow(gf.g, s, t, pmf.c, pmf.rc, pmf.re, &col[0], &pred[0]);
 
   return flow;
 }
 
 bool EqColoring::useNewIndepCliques(bool sBetterClique){
+	//save current data in backup variables
   vertexIter vIt1, vIt2;
   Graph tmpG;
   Cliques tmpCl = cl;
@@ -457,6 +515,7 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
     copy_graph(g, tmpG);
   }
 
+  //delete all nodes in clique and search for better cliques
   if(parm.wStartCl){
 	for(tie(vIt1,vIt2) = vertices(g); vIt1 != vIt2; vIt1++){
 		if(pm.cl[*vIt1] > 1){
@@ -477,7 +536,9 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
 
   findIndepCliques(indClq, true, true);
 
+  //if we do search for better cliques (its always the case)
   if(sBetterClique == true){
+	  //check if in the new cliques are more nodes than in the old one
     if(cl.nodesInClique < tmpCl.nodesInClique){
       cl = tmpCl;
       g = tmpG;
@@ -485,6 +546,7 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
 
       return false;
     }else if(cl.nodesInClique == tmpCl.nodesInClique){
+	//if the same amount of nodes are in both cliques check which one has the lowest clique
 		if(cl.vertInMinCl < tmpCl.vertInMinCl){
 			cl = tmpCl;
 			g = tmpG;
@@ -505,32 +567,25 @@ bool EqColoring::useNewIndepCliques(bool sBetterClique){
 
 
 bool EqColoring::updateIndepCliques(Vertex &v){
-	 //if(cl.nodesInClique - startClique.size() == 0){
-      //if(useNewIndepCliques(true)){
-        //cl.nNodesSameCl = 0;
-        //c.newCliques++;
-
-        //return true;
-      //}else{
-		  //std::cout << "uncolored V = " << curr.uncoloredVertices << std::endl;
-		//std::cout << "KEINE BESSERE CLIQUE" << std::endl;
-	  //}
-  //}
-
 	int tmp1=1;
 
 	if(!parm.wStartCl){
 		tmp1=0;
 	}
 
+	//if the node v is in a clique
   if(pm.cl[v] > tmp1 ){
     cl.nNodesSameCl++;
 
+	//check if a specific amount of nodes from the cliques are already visited (given by the probability pNewCl)
     if(cl.nNodesSameCl / (cl.nInCliqueBp * 1.0) > parm.pNewCl){
       if(useNewIndepCliques(true)){
+		  //check for better cliques
         cl.nNodesSameCl = 0;
       }else{
+		  //no better cliques are found
 		if(!removeVinIndClq(v, indClq)){
+			//remove vertex from the cliques
 			std::cout << "error while removing specific vertex from indepent cliques" << std::endl;
 		}
 
@@ -556,12 +611,16 @@ bool EqColoring::updateIndepCliques(Vertex &v){
 }
 
 bool EqColoring::nodeClique(){
+	//check if the algorithm has reached the timeout limit
   if(checkOvertime()){
     return true;
   }
 
+  //if all vertices are colored check if we found a better UB
   if(curr.uncoloredVertices == 0){
+	  //check if actual used colors is lower than the current upper bound
     if(curr.nColors < b.UB){
+		//check if the current coloring is an equitable one
 	    if(checkEqColoring()){
 		    b.UB = curr.nColors;
 
@@ -570,13 +629,11 @@ bool EqColoring::nodeClique(){
 			newUBBacktracking();
       }
     }
-	//else{
-		//checkForBacktracking(curr.node);
-	//}
     
     return true;
   }
 
+  //select a vertex
   Vertex v = passVSS();
   
   //std::cout << "curr.uncoloredVertices = " << curr.uncoloredVertices << std::endl;
@@ -584,32 +641,42 @@ bool EqColoring::nodeClique(){
   //printIndepCliques(indClq);
 
   //std::cout << "n = " << parm.n << " M = " << curr.M << " T = " << curr.T << " max(nColors, b.LB) = " << std::max(curr.nColors,b.LB) << std::endl;
+  //check for pruning rule (paper)
   if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
+	  //check for pruning rule (with clique)
 	  if(!pruneFF()){	
+		  //loop through the colors
 		for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
+		  //std::cout << "i = " << i << " b.UB = " << b.UB << " curr.nColors = " << curr.nColors << " min = " << std::min(b.UB-1,curr.nColors+1) << std::endl;
+		  //check if the color is available for this node
 			if(pm.fbc[v][i - 1] == 0){
 
 			c.visitedNodes++; 
 
+			//color this vertex
 			colorVertex(v, i);
 
 			//std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << " visited node = " << c.visitedNodes <<  std::endl;
 
 			t.startUIC = std::clock();
 	        
+			//update the independent cliques
 			updateIndepCliques(v);
 	  
 			t.timeUIC += (std::clock() - t.startUIC) / (double) CLOCKS_PER_SEC;
 
 			//curr.node = v;
 
+			//recursive function
 			nodeClique(); 
 
 			if(t.timeout){
 				return true;
 			}
 
+			//check if the algorithm is actual backtracking
           if(bt.status){
+			  //if it should backtrack to the actual node then check for better cliques
             if(bt.toRank == curr.rank){
               bt.status = false;
 
@@ -618,6 +685,7 @@ bool EqColoring::nodeClique(){
 				  c.newCliques++;
 			  }
             }else if(bt.toRank < curr.rank){
+				//otherwise continue the backtracking
               uncolorVertex(v);
 
               return true;
@@ -634,6 +702,7 @@ bool EqColoring::nodeClique(){
 
   }
 
+  //check for backtracking, if its possible then backtrack
   checkForBacktracking(v);
 
   //std::cout << "BACKTRACK to = " << bt.toRank << std::endl;
@@ -664,6 +733,10 @@ bool EqColoring::pruningRuleFF(){
   return true;
 }
 
+/**
+ * check if the actual coloring is equitable
+ */
+
 bool EqColoring::checkEquitability() const{
   for(unsigned int i = 0; i < curr.nColors; i++){
     for(unsigned int j = i+1; j < curr.nColors; j++){
@@ -675,6 +748,10 @@ bool EqColoring::checkEquitability() const{
 
   return true;
 }
+
+/**
+ * check if it is a coloring and equitable
+ */
 
 bool EqColoring::checkEqColoring() const{
   if(!Coloring::checkColoring()){
@@ -688,12 +765,18 @@ bool EqColoring::checkEqColoring() const{
   return true;
 }
 
+/**
+ * calculate an initial upper bound
+ */
+
 int EqColoring::naiveUB(){
   vertexIter vIt1, vIt2;
   Vertex v;
   bool haveSwapped = false;
   std::pair<int, int> cMinMax;
 
+  //use an inital coloring and swap every time a node from a low color class (with a low amount of nodes in it) with one in a high color class (with a high amount of nodes in it)
+  //is this not possible introduce a new color class (i.e. add a new one)
   while(!checkEquitability()){
     cMinMax = findMinMaxColorClass(INT_MAX, INT_MIN);
 
@@ -746,6 +829,10 @@ bool EqColoring::swapNodeToColor(Vertex v, int color){
   }
 }
 
+/**
+ * find a the indecis for color class with a lowest and highest amount of colors in it
+ */
+
 std::pair<int, int> EqColoring::findMinMaxColorClass(int cMin, int cMax){
   std::pair<int, int> cMinMax = std::make_pair(cMin, cMax);
 
@@ -762,6 +849,10 @@ std::pair<int, int> EqColoring::findMinMaxColorClass(int cMin, int cMax){
   return cMinMax;
 }
 
+/**
+ * calculate the upper bound, make use of the naiveUB fnct which is the main task for this
+ */
+
 int EqColoring::calcUB(){
   Graph tmpG;
   Current tmp;
@@ -772,7 +863,9 @@ int EqColoring::calcUB(){
   tmp = curr;
   cc_tmp = cc;
 
+  //use an initial coloring
   greedyColoring(g);
+  //make it equitable by swapping nodes from the lowest and highest color classes or introduce a new color class
   UB = naiveUB();
 
   g = tmpG;

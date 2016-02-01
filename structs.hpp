@@ -41,15 +41,14 @@ struct prevGraphs {
   Vertex dlNode; /**< last colored vertices */
   long dlColor; /**< last used color */
   int uncoloredVertices; /**< uncolored vertices */
-  //std::vector<VertexFord> vert; /**< vector with all vertices used in the graph for the network i.e. FF */
-  std::vector<std::vector<VertexFord> > vertCliques; /**< vector with all vertices used in the graph for the network i.e. FF */
-  std::vector<std::vector<VertexFord> > vertCliquesColors; /**< vector with all vertices used in the graph for the network i.e. FF */
-  std::vector<VertexFord> vertColors; /**< vector with all vertices used in the graph for the network i.e. FF */
-  std::vector<VertexFord> vertRemaining;
-  VertexFord source1;
-  VertexFord source2;
-  VertexFord target1;
-  VertexFord target2;
+  std::vector<std::vector<VertexFord> > vertCliques; /**< vector with all vertices in cliques for FF */
+  std::vector<std::vector<VertexFord> > vertCliquesColors; /**< vector with all nodes between cliques and colors for FF */
+  std::vector<VertexFord> vertColors; /**< vector with all colors for FF */
+  std::vector<VertexFord> vertRemaining; /**< vector with all reaming nodes i.e. all nodes that are not in a clique */
+  VertexFord source1; /**< vertex for the source (2 FF) */
+  VertexFord source2; /**< vertex for the source (1 FF) */
+  VertexFord target1; /**< vertex for the target (2 FF) */
+  VertexFord target2; /**< vertex for the target (1 FF) */
   
   int n; /**< number of vertices for the first FF */
   int nNew; /**< number of vertices for the second FF */
