@@ -1,3 +1,11 @@
+/**
+ * @file Input.cpp
+ * @brief Source file
+ * @author Sven Förster
+ * @version 1.1.0
+ * @date 2016-02-10
+ */
+
 #include "Input.hpp"
 #include <cstdlib>
 #include <string>

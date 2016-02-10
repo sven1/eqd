@@ -1,3 +1,11 @@
+/**
+ * @file Coloring.cpp
+ * @brief Source File
+ * @author Sven Förster
+ * @version 1.1.0
+ * @date 2016-02-10
+ */
+
 #include "Coloring.hpp"
 
 Coloring::Coloring(){
@@ -75,9 +83,6 @@ bool Coloring::initCliques(){
 	}
 
   findIndepCliques(indClq, true, true);
-
-  //printClique(startClique);
-  //printIndepCliques(indClq);
 
   return true;
 }

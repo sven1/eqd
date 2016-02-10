@@ -1,10 +1,9 @@
 /**
- * \file structs.hpp
- * \author Sven Förster
- * \date 29.12.2015
- *
- * \version 1.0.0
- * cleaning code
+ * @file structs.hpp
+ * @brief structs defining 
+ * @author Sven Förster
+ * @version 1.1.0
+ * @date 2016-02-10
  */
 
 #ifndef STRUCTS_HPP

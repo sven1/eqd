@@ -1,10 +1,9 @@
 /**
- * \file boost.hpp
- * \author Sven Förster
- * \date 29.12.2015
- *
- * \version 1.0.0
- * cleaning code
+ * @file boost.hpp
+ * @brief boost typedefs for an easy handeling with boost lib
+ * @author Sven Förster
+ * @version 1.1.0
+ * @date 2016-02-10
  */
 
 #ifndef BOOST_HPP

@@ -1,3 +1,11 @@
+/**
+ * @file Heuristic.cpp
+ * @brief Source File
+ * @author Sven Förster
+ * @version 1.1.0
+ * @date 2016-02-10
+ */
+
 #include "Heuristic.hpp"
 
 bool Heuristic::findIndepCliques(Graph &g, PropertyMap &pm){
