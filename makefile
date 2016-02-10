@@ -30,4 +30,4 @@ ctar :
 	rm *.tar
 
 tar :
-	tar -cvf eqDsatur_$(DATE).tar *.hpp *.cpp makefile doStats.sh Doxyfile
+	tar -cvf eqDsatur_$(DATE).tar *.hpp *.cpp README.md makefile doStats.sh Doxyfile
