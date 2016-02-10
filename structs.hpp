@@ -62,6 +62,8 @@ struct prevGraphs {
 struct Bounds {
   long UB; /**< upper bound */
   long LB; /**< lower bound */
+  long startUB; /**< start upper bound */
+  long startLB; /**< start lower bound */
 };
 
 /**

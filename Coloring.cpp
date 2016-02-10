@@ -1080,7 +1080,7 @@ bool Coloring::decColorClass(int color){
 }
 
 void Coloring::printStudyRandomGraphs() const{
-  std::cout << "Variant=" << parm.eqDsatur << ";" << "rGraph=" << parm.INIT_SRAND << ";" << "n=" << parm.n << ";" << "p=" << parm.p << ";" << t.timeTotal << ";" << b.LB << ";" << b.UB << ";" << c.visitedNodes << ";" << c.backtracks << ";" << c.nFF << ";" << c.newCliques << ";" << t.timeFF << ";" << t.timeFindIndCliques << ";" << t.timeUIC << ";" << t.timeout << ";" << std::endl;
+  std::cout << "Variant=" << parm.eqDsatur << ";" << "rGraph=" << parm.INIT_SRAND << ";" << "n=" << parm.n << ";" << "p=" << parm.p << ";" << t.timeTotal << ";" << b.startLB << ";" << b.startUB <<";" <<  b.LB << ";" << b.UB << ";" << c.visitedNodes << ";" << c.backtracks << ";" << c.nFF << ";" << c.newCliques << ";" << t.timeFF << ";" << t.timeFindIndCliques << ";" << t.timeUIC << ";" << t.timeout << ";" << std::endl;
 }
 
 void Coloring::calcTime(){

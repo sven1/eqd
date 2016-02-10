@@ -5,6 +5,9 @@ EqColoring::EqColoring() : Coloring(){
 
 EqColoring::EqColoring(const Parameters &parm) : Coloring(parm){
   setBounds(b.LB, calcUB());
+  b.startUB = b.UB;
+  b.startLB = b.LB;
+
 
   // same bounds -> quit
   if(b.LB != b.UB){
@@ -82,13 +85,13 @@ bool EqColoring::node(){
   //select a node
   Vertex v = passVSS();
 
-  //loop through all colors
-  for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
-    //check if the color can be applied to this node (i.e. check if the color is available for this node)
-	if(pm.fbc[v][i - 1] == 0){
-		// pruning rule from the paper
-      if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
-		  // variable to count visited nodes in the searching tree
+  // pruning rule from the paper
+  if(parm.n >= (curr.M - 1) * std::max(curr.nColors, b.LB) + curr.T){
+	//loop through all colors
+	for(int i = 1; i <= std::min(b.UB - 1, curr.nColors + 1); i++){
+      //check if the color can be applied to this node (i.e. check if the color is available for this node)
+	  if(pm.fbc[v][i - 1] == 0){
+		// variable to count visited nodes in the searching tree
         c.visitedNodes++;
 
 		// color vertex with color i
