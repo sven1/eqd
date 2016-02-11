@@ -168,6 +168,32 @@ class EqColoring : Coloring{
 	 * @return pair of indices of the color class
 	 */
     std::pair<int, int> findMinMaxColorClass(int cMin, int cMax);
+
+	/**
+	 * @brief extend backup graph with one color more
+	 * @param color color
+	 */
+	void extendBackupGraph(int color);
+
+	/**
+	 * @brief remove changes that are made to initialize the network for the second FF
+	 * @param color color
+	 */
+	void removeNetwork2(int color);
+
+	/**
+	 * @brief remove vertex with this color from backup graph
+	 * @param v vertex
+	 * @param color color
+	 */
+	void removeVertexBackupGraph(Vertex v, int color);
+
+	/**
+	 * @brief add vertex with this color from backup graph
+	 * @param v vertex
+	 * @param color color
+	 */
+	void addVertexBackupGraph(Vertex v, int color);
 };
 
 #endif

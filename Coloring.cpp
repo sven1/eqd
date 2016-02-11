@@ -547,7 +547,7 @@ bool Coloring::checkForBacktracking(Vertex v){
 
   bt.toRank = backtrackToRank(v);
   bt.status = true;
-  curr.rankNC = curr.rank;
+  //curr.rankNC = curr.rank;
   c.backtracks++;
   curr.createNewGraphs = true;
 
@@ -644,7 +644,7 @@ bool Coloring::initVar(){
     return false;
   }
 
-  if(!setCurr(0, 0, 0, parm.n, 0, 0, 0, false)){
+  if(!setCurr(0, 0, 0, parm.n, 0, 0, 0, true)){
     std::cout << "error while setting init current information" << std::endl;
 
     return false;
@@ -1109,7 +1109,7 @@ bool Coloring::checkOvertime(){
 void Coloring::newUBBacktracking(){
   if((unsigned) bt.fRC.back() > startClique.size()){
     bt.status = true;
-    curr.rankNC = curr.rank;
+    //curr.rankNC = curr.rank;
     c.backtracks++;
     curr.createNewGraphs = true;
     bt.toRank = bt.fRC.back();
