@@ -440,7 +440,7 @@ void EqColoring::addVertexBackupGraph(Vertex v, int color){
 
 bool EqColoring::pruneFF(){
   t.startFF = std::clock();
-  //curr.createNewGraphs = true;
+  curr.createNewGraphs = true;
 
   if(curr.createNewGraphs == true){
 		curr.minBP = std::max(b.LB, curr.nColors);
@@ -453,8 +453,8 @@ bool EqColoring::pruneFF(){
 
 		t.timeBuildNetwork += (std::clock() - t.startBuildNetwork) / (double) CLOCKS_PER_SEC;
 
-		curr.createNewGraphs = false;
-		curr.rankNC = curr.rank;
+		//curr.createNewGraphs = false;
+		//curr.rankNC = curr.rank;
   }
   
   for(unsigned int i = curr.minBP; i < b.UB; i++){
@@ -991,7 +991,7 @@ bool EqColoring::nodeClique(){
 			colorVertex(v, i);
 
 		  std::cout << "rankNC = " << curr.rankNC << " curr.createNewGraphs = " << curr.createNewGraphs << std::endl;
-			removeVertexBackupGraph(v, i);
+			//removeVertexBackupGraph(v, i);
 
 			std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << " visited node = " << c.visitedNodes <<  std::endl;
 
@@ -1023,23 +1023,23 @@ bool EqColoring::nodeClique(){
 
 				  curr.rankNC = curr.rank;
 			  }
+
+			  curr.createNewGraphs = true;
             }else if(bt.toRank < curr.rank){
 				//otherwise continue the backtracking
               uncolorVertex(v);
 
               return true;
             }
-
-			curr.createNewGraphs = true;
           }
 
           uncolorVertex(v);
 
-			if(curr.rank > curr.rankNC){
-				addVertexBackupGraph(v, i);
-			}else{
-				curr.createNewGraphs = true;
-			}
+			//if(curr.rank > curr.rankNC){
+				//addVertexBackupGraph(v, i);
+			//}else{
+				//curr.createNewGraphs = true;
+			//}
         }
       }
     }else{
