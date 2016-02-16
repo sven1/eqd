@@ -185,6 +185,21 @@ void EqColoring::extendBackupGraph(int color){
 		pmf.c[eF2] = 0;
 	}
 	
+	//std::cout << "remaining verts <-> colors" << std::endl;
+	for(unsigned int i = 0; i<gf.vertRemaining.size(); i++){
+		int k = color-1;
+		if(pm.fbc[pmf.rf[gf.vertRemaining[i]]][k] == 0){
+			eF1 = add_edge(gf.vertRemaining[i], gf.vertColors[k], gf.g).first;
+			eF2 = add_edge(gf.vertColors[k], gf.vertRemaining[i], gf.g).first;
+
+			pmf.re[eF1] = eF2;
+			pmf.re[eF2] = eF1;
+
+			pmf.c[eF1] = 1;
+			pmf.c[eF2] = 0;
+		}
+	}
+
 	//std::cout << "colors <-> target" << std::endl;
 	gf.sumLB = 0;
 
@@ -460,7 +475,7 @@ bool EqColoring::pruneFF(){
   for(unsigned int i = curr.minBP; i < b.UB; i++){
 	//t.startBuildNetwork = std::clock();
 
-	// check pruning rule
+	// check simple pruning rule for max. color class
 	if(curr.M > ceil(parm.n*1./i)){
 		//change backupgraph for next color
 		extendBackupGraph(i+1);
@@ -491,10 +506,12 @@ bool EqColoring::pruneFF(){
 		resetCap();
 
 		curr.minBP = i;
-	  std::cout << "work for color = " << i << std::endl;
+	  //std::cout << "work for color = " << i << std::endl;
       return false;
     }
 
+	//remove changes to build the second network
+	removeNetwork2(i);
 	//change backupgraph for next color
 	extendBackupGraph(i+1);
 	//reset residual network
@@ -503,7 +520,7 @@ bool EqColoring::pruneFF(){
 
   t.timeFF += (std::clock() - t.startFF) / (double) CLOCKS_PER_SEC;
 
-	std::cout << "no color suitable " << std::endl;
+	//std::cout << "no color suitable " << std::endl;
 
   return true;
 }
@@ -806,7 +823,7 @@ bool EqColoring::pruneFF(int color){
   //start ford fulkerson from source2 as source to target2 as target
   flow = performEKMF(gf.source2, gf.target2);
 
-  std::cout << "flow = " << flow << " sumLB = " << gf.sumLB << std::endl;
+  //std::cout << "flow = " << flow << " sumLB = " << gf.sumLB << std::endl;
   if(!(flow == gf.sumLB)){
 	//there exist no a equitable coloring
 	return true;
@@ -815,7 +832,7 @@ bool EqColoring::pruneFF(int color){
     
     flow = performEKMF(gf.source1, gf.target1);
 
-	std::cout << "flow = " << flow << " uncoloredVertices = " << gf.uncoloredVertices << std::endl;
+	//std::cout << "flow = " << flow << " uncoloredVertices = " << gf.uncoloredVertices << std::endl;
     if(flow == gf.uncoloredVertices){
 	  //there exist a equitable coloring
       return false;
@@ -990,10 +1007,10 @@ bool EqColoring::nodeClique(){
 			//color this vertex
 			colorVertex(v, i);
 
-		  std::cout << "rankNC = " << curr.rankNC << " curr.createNewGraphs = " << curr.createNewGraphs << std::endl;
+		  //std::cout << "rankNC = " << curr.rankNC << " curr.createNewGraphs = " << curr.createNewGraphs << std::endl;
 			//removeVertexBackupGraph(v, i);
 
-			std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << " visited node = " << c.visitedNodes <<  std::endl;
+			//std::cout << "Faerbe Knoten = " << v << " mit Farbe = " << i << " visited node = " << c.visitedNodes <<  std::endl;
 
 			t.startUIC = std::clock();
 	        
